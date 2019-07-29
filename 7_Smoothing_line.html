@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chaikin-smooth@1.0.4/index.min.js"></script>
+</head>
+
+<body>
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+        <label for="shall-smoothen">Smooth drawn geometry?</label>
+        <input id="shall-smoothen" type="checkbox" checked><br>
+        <label for="iterations">Number of smoothings</label>
+        <input style="width: 250px;" type="range" id="iterations" min="2" max="10" step="1" value="5">
+    </form>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+
+        function makeSmooth(path, numIterations) {
+            numIterations = Math.min(Math.max(numIterations, 1), 10);
+            while (numIterations > 0) {
+                path = smooth(path);
+                numIterations--;
+            }
+            return path;
+        }
+
+        var vectorSource = new ol.source.Vector();
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM(),
+                    opacity: 0.5
+                }),
+                new ol.layer.Vector({
+                    source: vectorSource
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [1078373.5950, 6871994.5910],
+                zoom: 5
+            })
+        });
+
+        var shallSmoothen = document.getElementById('shall-smoothen');
+        var numIterations = document.getElementById('iterations');
+
+        var draw = new ol.interaction.Draw({
+            source: vectorSource,
+            type: 'LineString'
+        });
+        map.addInteraction(draw);
+        draw.on('drawend', function (event) {
+            if (!shallSmoothen.checked) {
+                return;
+            }
+            var feat = event.feature;
+            var geometry = feat.getGeometry();
+            var coords = geometry.getCoordinates();
+            var smoothened = makeSmooth(coords, parseInt(numIterations.value, 10) || 5);
+            geometry.setCoordinates(smoothened);
+        });
+    </script>
+</body>
+
+</html>
