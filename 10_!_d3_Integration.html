@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+    <script src="https://unpkg.com/d3@4.12.0/build/d3.js"></script>
+    <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.js"></script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.Stamen({
+                        layer: 'watercolor'
+                    })
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: ol.proj.fromLonLat([-97, 38]),
+                zoom: 4
+            })
+        });
+
+
+        /**
+         * Load the topojson data and create an ol/layer/Image for that data.
+         * topojson, geojson 모두 지도를 그리기 위한 재료, 지리적 데이터 구조를 JSON 형식을 표현한 것
+         * topojson은 geojson에 비해 파일 사이즈가 작은 장점을 가짐 (통상 기하학적인 조정을 한다면 geoJSON, 그렇지않다면 심플한 topoJSON)
+         * ? geoJSON은 coordinate속성을 반드기 있어야 하면 경계정보가 중복되어서 나타난다.
+         * ? topoJSON은 경계에 arc속성으로 이루어져 중복이되지않고 위상(topology)에 따라 인코딩 됩니다. 따라서  10배 정도 geoJSON에 비해 가볍다. 
+         */
+
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        d3.json('C:/VScode/OpenLayers-Study-master/data/topojson/us.json', function (error, us) {
+            //d3 메서드를 사용해 json데이터를 콜백으로 받아 feature 생성
+            var features = topojson.feature(us, us.objects.counties);
+
+            /**
+             * This function uses d3 to render the topojson features to a canvas.
+             * @param {module:ol/extent~Extent} extent Extent.
+             * @param {number} resolution Resolution.
+             * @param {number} pixelRatio Pixel ratio.
+             * @param {module:ol/size~Size} size Size.
+             * @param {module:ol/proj/Projection~Projection} projection Projection.
+             * @return {HTMLCanvasElement} A canvas element.
+             * 저러한 경로에 전역변수가 존재한다.
+             */
+
+            var canvasFunction = function (extent, resolution, pixelRatio, size, projection) {
+                var canvasWidth = size[0];
+                var canvasHeight = size[1];
+
+                //d3 canvas DOM 생성 및 속성 추가
+                var canvas = d3.select(document.createElement('canvas'));
+                canvas.attr('width', canvasWidth).attr('height', canvasHeight);
+
+                //2d로 된 드로잉 컨텍스트를 반환
+                var context = canvas.node().getContext('2d');
+
+                //https://github.com/d3/d3-3.x-api-reference/blob/master/Geo-Projections.md 참고
+                var d3Projection = d3.geoMercator().scale(1).translate([0, 0]);
+                var d3Path = d3.geoPath().projection(d3Projection);
+
+                //https://stackoverflow.com/questions/25310390/how-does-path-bounds-work 참고
+                //feature들의 바운드를 생성한다.
+                var pixelBounds = d3Path.bounds(features);
+                var pixelBoundsWidth = pixelBounds[1][0] - pixelBounds[0][0];
+                var pixelBoundsHeight = pixelBounds[1][1] - pixelBounds[0][1];
+
+                //https://github.com/d3/d3-3.x-api-reference/blob/master/Geo-Paths.md 참고
+                //지정된 지형에 대한 구형 경계 상자를 반환한다. (2차원배열)
+                var geoBounds = d3.geoBounds(features);
+                var geoBoundsLeftBottom = ol.proj.fromLonLat(geoBounds[0], projection);
+                var geoBoundsRightTop = ol.proj.fromLonLat(geoBounds[1], projection);
+                var geoBoundsWidth = geoBoundsRightTop[0] - geoBoundsLeftBottom[0];
+                if (geoBoundsWidth < 0) {
+                    geoBoundsWidth += ol.extent.getWidth(projection.getExtent());
+                }
+                var geoBoundsHeight = geoBoundsRightTop[1] - geoBoundsLeftBottom[1];
+
+                //pixel로 나누어 주지않으면 지도보다 훨씬 크다.
+                // ?
+                var widthResolution = geoBoundsWidth / pixelBoundsWidth;
+                var heightResolution = geoBoundsHeight / pixelBoundsHeight;
+                var r = Math.max(widthResolution, heightResolution);
+                var scale = r / (resolution / pixelRatio);
+
+                //지도의 중앙과 canvas가 배경 맵의 이동이나 줌레벨 몇경에 따른 translate 및  proj 설정
+                var center = ol.proj.toLonLat(ol.extent.getCenter(extent), projection);
+                d3Projection.scale(scale).center(center)
+                    .translate([canvasWidth / 2, canvasHeight / 2]);
+                d3Path = d3Path.projection(d3Projection).context(context);
+                d3Path(features);
+                context.stroke();
+
+                return canvas.node();
+            };
+
+            //1. layer 이미지를  canvas로 설정을 한다 대신 canvasFunction을 사용 
+            var layer = new ol.layer.Image({
+                source: new ol.source.ImageCanvas({
+                    canvasFunction: canvasFunction,
+                    projection: 'EPSG:3857'
+                })
+            });
+            map.addLayer(layer);
+        });
+    </script>
+</body>
+
+</html>

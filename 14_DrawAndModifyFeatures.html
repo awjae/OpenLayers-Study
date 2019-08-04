@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+
+</head>
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+        <label>Geometry type &nbsp;</label>
+        <select id="type">
+            <option value="Point">Point</option>
+            <option value="LineString">LineString</option>
+            <option value="Polygon">Polygon</option>
+            <option value="Circle">Circle</option>
+        </select>
+    </form>
+    <script>    
+
+    var raster = new ol.layer.Tile({
+        source: new ol.source.OSM()
+    });
+
+    var source = new ol.source.Vector();
+    var vector = new ol.layer.Vector({
+    source: source,
+    style: new ol.style.Style({
+        fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)'
+        }),
+        stroke: new ol.style.Stroke({ //포인트를 제외한..
+        color: '#ffcc33', 
+        width: 2
+        }),
+        image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({ //포인트
+            color: '#ffcc33'
+        })
+        })
+    })
+    });
+
+    var map = new ol.Map({
+    layers: [raster, vector],
+    target: 'map',
+    view: new ol.View({
+        center: [-11000000, 4600000],
+        zoom: 4
+    })
+    });
+
+    //수정 설정
+    var modify = new ol.interaction.Modify({source: source});
+    map.addInteraction(modify);
+
+    //수정할때 효과를 더해주기위한  스냅과 드로우
+    var draw, snap;
+    var typeSelect = document.getElementById('type');
+
+    function addInteractions() {
+        draw = new ol.interaction.Draw({
+            source: source,
+            type: typeSelect.value
+        });
+        map.addInteraction(draw);
+        snap = new ol.interaction.Snap({source: source}); //벡터 피처를 수정 하는 동안 벡터 피처를 스냅 처리한다.
+        map.addInteraction(snap);
+    }
+
+    /**
+     * Handle change event.
+     */
+    //셀렉트 옵션에 따른 변경
+    typeSelect.onchange = function() {
+        map.removeInteraction(draw);
+        map.removeInteraction(snap);
+        addInteractions();
+    };
+
+    addInteractions();
+    </script>
+</body>
+</html>
