@@ -16,10 +16,11 @@
     
     <script>
         //Shift + drag  로 변경되는 기본효과 적용
+        //수치를 입력해 직접적으로 이벤트를 주는 것 생각해보기
         var map = new ol.Map({
             interactions: ol.interaction.defaults().extend([
-            new ol.interaction.DragRotateAndZoom()
-            ]),
+                new ol.interaction.DragRotateAndZoom()
+                ]),
             layers: [
                 new ol.layer.Tile({
                 source: new ol.source.OSM()

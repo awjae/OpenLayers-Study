@@ -41,8 +41,9 @@
          * Load the topojson data and create an ol/layer/Image for that data.
          * topojson, geojson 모두 지도를 그리기 위한 재료, 지리적 데이터 구조를 JSON 형식을 표현한 것
          * topojson은 geojson에 비해 파일 사이즈가 작은 장점을 가짐 (통상 기하학적인 조정을 한다면 geoJSON, 그렇지않다면 심플한 topoJSON)
-         * ? geoJSON은 coordinate속성을 반드기 있어야 하면 경계정보가 중복되어서 나타난다.
+         * ? geoJSON은 coordinate속성을 반드시 있어야 하며 경계정보가 중복되어서 나타난다.
          * ? topoJSON은 경계에 arc속성으로 이루어져 중복이되지않고 위상(topology)에 따라 인코딩 됩니다. 따라서  10배 정도 geoJSON에 비해 가볍다. 
+         * 좀더 공부할 필요
          */
 
         //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
@@ -94,7 +95,7 @@
                 var geoBoundsHeight = geoBoundsRightTop[1] - geoBoundsLeftBottom[1];
 
                 //pixel로 나누어 주지않으면 지도보다 훨씬 크다.
-                // ?
+                // 지도는 세계의 좌표, d3 는 자체의 좌표  두개의 좌표를 맵핑을 시켜줘야한다.
                 var widthResolution = geoBoundsWidth / pixelBoundsWidth;
                 var heightResolution = geoBoundsHeight / pixelBoundsHeight;
                 var r = Math.max(widthResolution, heightResolution);
@@ -114,7 +115,7 @@
             //1. layer 이미지를  canvas로 설정을 한다 대신 canvasFunction을 사용 
             var layer = new ol.layer.Image({
                 source: new ol.source.ImageCanvas({
-                    canvasFunction: canvasFunction,
+                    canvasFunction: canvasFunction, 
                     projection: 'EPSG:3857'
                 })
             });

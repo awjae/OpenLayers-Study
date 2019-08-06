@@ -30,22 +30,22 @@
 
     var source = new ol.source.Vector();
     var vector = new ol.layer.Vector({
-    source: source,
-    style: new ol.style.Style({
-        fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)'
-        }),
-        stroke: new ol.style.Stroke({ //포인트를 제외한..
-        color: '#ffcc33', 
-        width: 2
-        }),
-        image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({ //포인트
-            color: '#ffcc33'
+        source: source,
+        style: new ol.style.Style({
+            fill: new ol.style.Fill({
+            color: 'rgba(255, 255, 255, 0.2)'
+            }),
+            stroke: new ol.style.Stroke({ //포인트를 제외한..
+            color: '#ffcc33', 
+            width: 2
+            }),
+            image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({ //포인트
+                    color: '#ffcc33'
+                })
+            })
         })
-        })
-    })
     });
 
     var map = new ol.Map({
@@ -71,7 +71,7 @@
             type: typeSelect.value
         });
         map.addInteraction(draw);
-        snap = new ol.interaction.Snap({source: source}); //벡터 피처를 수정 하는 동안 벡터 피처를 스냅 처리한다.
+        snap = new ol.interaction.Snap({source: source}); //벡터 피처를 수정 하는 동안 벡터 피처를 스냅 처리한다. 스냅핑 : 중간에찍은 vertex 에 붙혀줌
         map.addInteraction(snap);
     }
 

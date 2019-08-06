@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="ol.js"></script>
-    <link rel="stylesheet" href="ol.css">
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <link rel="stylesheet" href="https://openlayers.org/en/v5.3.0/css/ol.css" type="text/css">
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
     <script src="https://unpkg.com/gyronorm@2.0.6/dist/gyronorm.complete.min.js"></script>
 
@@ -50,9 +50,9 @@
             gn.start(function(event) {
             var center = view.getCenter();
             var resolution = view.getResolution(); //초기 해상도
-            var alpha = toRadians(event.do.beta);
-            var beta = toRadians(event.do.beta);
-            var gamma = toRadians(event.do.gamma);
+            var alpha = toRadians(300);
+            var beta = toRadians(100);
+            var gamma = toRadians(90);
 
             el('alpha').innerText = alpha + ' [rad]';
             el('beta').innerText = beta + ' [rad]';
