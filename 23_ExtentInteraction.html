@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var vectorSource = new ol.source.Vector({
+            url: 'data/geojson/countries.geojson',
+            format: new ol.format.GeoJSON()
+        });
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                new ol.layer.Vector({
+                    source: vectorSource
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        //Return true if only the platform-modifier-key (the meta-key on Mac, ctrl-key otherwise) is pressed, false otherwise (e.g. when additionally the shift-key is pressed).
+        //실행 환경에 따른 수정키 설정 (맥의 경우 컨트롤, 그외 쉬프트)
+        var extent = new ol.interaction.Extent({
+            condition: ol.events.platformModifierKeyOnly
+        });
+        map.addInteraction(extent);
+        extent.setActive(false);
+
+        //Enable interaction by holding shift 쉬프트 클릭 이벤트
+        window.addEventListener('keydown', function (event) {
+            if (event.keyCode == 16) {
+                extent.setActive(true);
+            }
+        });
+        window.addEventListener('keyup', function (event) {
+            if (event.keyCode == 16) {
+                extent.setActive(false);
+            }
+        });
+    </script>
+</body>
+
+</html>

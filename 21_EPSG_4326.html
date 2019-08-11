@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        //WMS는 웹 환경에서 지도를 서비스하는 것으로, 클라이언트가 요청한 영역에 대한 지도를 서버측에서 이미지로 생성해 제공해 주는 서비스
+        var layers = [
+            new ol.layer.Tile({
+                source: new ol.source.TileWMS({
+                    url: 'https://ahocevar.com/geoserver/wms',
+                    params: {
+                        'LAYERS': 'ne:NE1_HR_LC_SR_W_DR',
+                        'TILED': true
+                    }
+                })
+            })
+        ];
+
+        //스케일라인. projection 설정
+        var map = new ol.Map({
+            controls: ol.control.defaults().extend([
+                new ol.control.ScaleLine({
+                    units: 'degrees'
+                })
+            ]),
+            layers: layers,
+            target: 'map',
+            view: new ol.View({
+                projection: 'EPSG:4326',
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Document</title>
+        <script src="ol.js"></script>
+        <link rel="stylesheet" href="ol.css">
+        <script
+            src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+        </script>
+
+    </head>
+
+    <body>
+        <!-- 기본틀로 사용하는 양식 -->
+        <div id="map" class="map"></div>
+
+        <script>
+            var map = new ol.Map({
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    })
+                ],
+                target: 'map',
+                view: new ol.View({
+                    center: [0, 0],
+                    zoom: 2
+                })
+            });
+
+            var imageStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5, //크기
+                    fill: new ol.style.Fill({
+                        color: 'yellow' //색상
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'red', //테두리
+                        width: 1
+                    })
+                })
+            });
+
+            //머리콩 셋팅
+            var headInnerImageStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 2,
+                    fill: new ol.style.Fill({
+                        color: 'blue'
+                    })
+                })
+            });
+            var headOuterImageStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: 'black'
+                    })
+                })
+            });
+
+            var n = 200; // 노란공 수
+            var omegaTheta = 30000; // Rotation period in ms // 속도
+            var R = 7e6;
+            var r = 2e6;
+            var p = 2e6;
+            //지도를 모두 그린(구성) 후에 발생하는 이벤트로, 이 이벤트를 활용하면 지도 상에서 다양한 동적인 그래픽 표현이 가능
+            //벡터 데이터를 구성하여 표현 할 수 있는 context를 이벤트 인자로 전달한다.
+            map.on('postcompose', function (event) {
+                var vectorContext = event.vectorContext;
+                var frameState = event.frameState;
+                var theta = 2 * Math.PI * frameState.time / omegaTheta;
+                var coordinates = [];
+                var i;
+                for (i = 0; i < n; ++i) {
+                    var t = theta + 2 * Math.PI * i / n;
+
+                    //실제로 적용하게되는 변수 x, y // 삼각함수의 그래프가 적용됨
+                    var x = (R + r) * Math.cos(t) + p * Math.cos((R + r) * t / r);
+                    var y = (R + r) * Math.sin(t) + p * Math.sin((R + r) * t / r);
+                    coordinates.push([x, y]);
+                }
+
+                //만든 coordinates, style 들을 context에 셋팅해준다
+                vectorContext.setStyle(imageStyle);
+                vectorContext.drawGeometry(new ol.geom.MultiPoint(coordinates));
+
+                var headPoint = new ol.geom.Point(coordinates[coordinates.length - 1]);
+
+                vectorContext.setStyle(headOuterImageStyle);
+                vectorContext.drawGeometry(headPoint);
+
+                vectorContext.setStyle(headInnerImageStyle);
+                vectorContext.drawGeometry(headPoint);
+
+                map.render();
+            });
+            map.render();
+        </script>
+    </body>
+
+    </html>
