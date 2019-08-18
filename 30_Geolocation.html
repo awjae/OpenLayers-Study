@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <div id="info" style="display: none;"></div>
+    <label for="track">
+        위치추적
+        <input id="track" type="checkbox" />
+    </label>
+    <p>
+        position accuracy : <code id="accuracy"></code>&nbsp;&nbsp; <!--위치정확성-->
+        altitude : <code id="altitude"></code>&nbsp;&nbsp;  <!--고도-->
+        altitude accuracy : <code id="altitudeAccuracy"></code>&nbsp;&nbsp;     <!--고도정확성-->
+        heading : <code id="heading"></code>&nbsp;&nbsp;    <!--방향-->
+        speed : <code id="speed"></code>    <!--속도-->   
+    </p>
+
+    <script>
+        var view = new ol.View({
+            center: [0, 0],
+            zoom: 2
+        });
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: view
+        });
+
+        //4.
+        var geolocation = new ol.Geolocation({
+            // enableHighAccuracy must be set to true to have the heading value.
+            trackingOptions: {
+                enableHighAccuracy: true
+            },
+            projection: view.getProjection()
+        });
+
+        function el(id) {
+            return document.getElementById(id);
+        }
+
+        //3.
+        el('track').addEventListener('change', function () {
+            geolocation.setTracking(this.checked);
+        });
+
+        //5.
+        // update the HTML page when the position changes.
+        geolocation.on('change', function () {
+            el('accuracy').innerText = geolocation.getAccuracy() + ' [m]';
+            el('altitude').innerText = geolocation.getAltitude() + ' [m]';
+            el('altitudeAccuracy').innerText = geolocation.getAltitudeAccuracy() + ' [m]';
+            el('heading').innerText = geolocation.getHeading() + ' [rad]';
+            el('speed').innerText = geolocation.getSpeed() + ' [m/s]';
+        });
+
+        //4.
+        // handle geolocation error.
+        geolocation.on('error', function (error) {
+            var info = document.getElementById('info');
+            info.innerHTML = error.message;
+            info.style.display = '';
+        });
+
+        //2.
+        var accuracyFeature = new ol.Feature();
+        geolocation.on('change:accuracyGeometry', function () {
+            accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+        });
+
+        var positionFeature = new ol.Feature();
+        positionFeature.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                    color: '#3399CC'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 2
+                })
+            })
+        }));
+
+        geolocation.on('change:position', function () {
+            var coordinates = geolocation.getPosition();
+            positionFeature.setGeometry(coordinates ?
+                new ol.geom.Point(coordinates) : null);
+        });
+
+        //1.
+        new ol.layer.Vector({
+            map: map,
+            source: new ol.source.Vector({
+                features: [accuracyFeature, positionFeature]
+            })
+        });
+    </script>
+</body>
+
+</html>
