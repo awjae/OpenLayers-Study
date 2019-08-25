@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        
+        //1. icon 스타일 과 feature 생성
+        var iconFeature = new ol.Feature(new ol.geom.Point([0, 0]));
+        iconFeature.set('style', createStyle('./data/icon.png', undefined));
+
+        function createStyle(src, img) {
+            return new ol.style.Style({
+                image: new ol.style.Icon(({
+                    anchor: [0.5, 0.96],
+                    crossOrigin: 'anonymous',
+                    src: src,
+                    img: img,
+                    imgSize: img ? [img.width, img.height] : undefined
+                }))
+            });
+        }
+
+        //2. 생성한 feature와 stamen Tile 로 map 생성 및 view 설정
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.Stamen({
+                        layer: 'watercolor'
+                    })
+                }),
+                new ol.layer.Vector({
+                    style: function (feature) {
+                        return feature.get('style');
+                    },
+                    source: new ol.source.Vector({
+                        features: [iconFeature]
+                    })
+                })
+            ],
+            target: document.getElementById('map'),
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 3
+            })
+        });
+
+
+        //map 의  상호작용으로 쓰인다. 
+        var selectStyle = {};
+        var select = new ol.interaction.Select({
+            style: function (feature) {
+                var image = feature.get('style').getImage().getImage();
+                if (!selectStyle[image.src]) {
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    context.drawImage(image, 0, 0, image.width, image.height);
+                    var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    var data = imageData.data;
+                    for (var i = 0; i < data.length; i = i + (i % 4 == 2 ? 2 : 1)) {
+                        data[i] = 255 - data[i];
+                    }
+                    context.putImageData(imageData, 0, 0);
+                    selectStyle[image.src] = createStyle(undefined, canvas);
+                }
+                return selectStyle[image.src];
+            }
+        });
+        map.addInteraction(select);
+
+        //포인터 무브에 따른  cursor 변경이벤트
+        map.on('pointermove', function (evt) {
+            map.getTargetElement().style.cursor =
+                map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : '';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <table id="info">
+        <tr>
+            <td>All features:</td>
+            <td id="all"></td>
+        </tr>
+        <tr>
+            <td>Hotel features:</td>
+            <td id="hotel"></td>
+        </tr>
+        <tr>
+            <td>Restaurant features:</td>
+            <td id="restaurant"></td>
+        </tr>
+    </table>
+
+
+    <script>
+    let inputData= `<?xml version="1.0" encoding="UTF-8"?>
+<msGMLOutput 
+	 xmlns:gml="http://www.opengis.net/gml"
+	 xmlns:xlink="http://www.w3.org/1999/xlink"
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<restaurant_layer>
+	<gml:name>Restaurants</gml:name>
+		<restaurant_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537750.006175,150923.784252 537750.006175,150923.784252</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537750.006175,150923.784252</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>Château d&#39;Ouchy</display_name>
+			<name>Château d&#39;Ouchy</name>
+			<osm_id>1230808910</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity>restaurant</amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator></operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism></tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</restaurant_feature>
+		<restaurant_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537770.247124,150975.613968 537770.247124,150975.613968</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537770.247124,150975.613968</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>Cafe du Vieil Ouchy</display_name>
+			<name>Cafe du Vieil Ouchy</name>
+			<osm_id>1433812389</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity>restaurant</amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator>Carine Duca</operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism></tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</restaurant_feature>
+		<restaurant_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537789.197617,150976.218227 537789.197617,150976.218227</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537789.197617,150976.218227</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>Creperie</display_name>
+			<name>Creperie</name>
+			<osm_id>1433812391</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity>restaurant</amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator></operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism></tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</restaurant_feature>
+		<restaurant_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537810.679909,150983.377694 537810.679909,150983.377694</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537810.679909,150983.377694</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>1433812390</display_name>
+			<name></name>
+			<osm_id>1433812390</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity>restaurant</amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator></operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism></tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</restaurant_feature>
+	</restaurant_layer>
+	<hotel_layer>
+	<gml:name>Hôtels</gml:name>
+		<hotel_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537762.425297,150971.904013 537762.425297,150971.904013</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537762.425297,150971.904013</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>Hotel du port</display_name>
+			<name>Hotel du port</name>
+			<osm_id>2886793101</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity></amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator></operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism>hotel</tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</hotel_feature>
+		<hotel_feature>
+			<gml:boundedBy>
+				<gml:Box srsName="EPSG:21781">
+					<gml:coordinates>537798.352160,150985.584164 537798.352160,150985.584164</gml:coordinates>
+				</gml:Box>
+			</gml:boundedBy>
+			<THE_GEOM>
+			<gml:Point srsName="EPSG:21781">
+			  <gml:coordinates>537798.352160,150985.584164</gml:coordinates>
+			</gml:Point>
+			</THE_GEOM>
+			<display_name>Angleterre</display_name>
+			<name>Angleterre</name>
+			<osm_id>1433812387</osm_id>
+			<access></access>
+			<aerialway></aerialway>
+			<amenity></amenity>
+			<barrier></barrier>
+			<bicycle></bicycle>
+			<brand></brand>
+			<building></building>
+			<covered></covered>
+			<denomination></denomination>
+			<ele></ele>
+			<foot></foot>
+			<highway></highway>
+			<layer></layer>
+			<leisure></leisure>
+			<man_made></man_made>
+			<motorcar></motorcar>
+			<natural></natural>
+			<operator></operator>
+			<population></population>
+			<power></power>
+			<place></place>
+			<railway></railway>
+			<ref></ref>
+			<religion></religion>
+			<shop></shop>
+			<sport></sport>
+			<surface></surface>
+			<tourism>hotel</tourism>
+			<waterway></waterway>
+			<wood></wood>
+		</hotel_feature>
+	</hotel_layer>
+</msGMLOutput>
+`;
+    </script>
+
+<script>
+    var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+    //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+
+    //CORS로 인한 주석처리
+    // fetch('data/wmsgetfeatureinfo/osm-restaurant-hotel.xml').then(function (response) {
+    //     return response.text();
+    // }).then(function (response) {
+        let response= inputData;
+        //1. xml데이터를 통해서 모든 Feature를 불러온다.
+        var allFeatures = new ol.format.WMSGetFeatureInfo().readFeatures(response);
+        document.getElementById('all').innerText = allFeatures.length.toString();
+
+        // when specifying the 'layers' options, only the features of those
+        // layers are returned by the format
+        //2. hotel에 관한 Feature만 가져온다.
+        var hotelFeatures = new ol.format.WMSGetFeatureInfo({
+            layers: ['hotel']
+        }).readFeatures(response);
+        document.getElementById('hotel').innerText = hotelFeatures.length.toString();
+
+        var restaurantFeatures = new ol.format.WMSGetFeatureInfo({
+            layers: ['restaurant']
+        }).readFeatures(response);
+        document.getElementById('restaurant').innerText = restaurantFeatures.length.toString();
+
+    //});
+</script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <div id="info">&nbsp;</div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        //1.BingMap 으로 부터 layer(raster) 생성
+        var raster = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                imagerySet: 'Aerial',
+                key: BingMapKey
+            })
+        });
+        
+        //2. 추후 layer에 등록할 style 을 생성 (Point, LineString, MultiLineString)
+        var style = {
+            'Point': new ol.style.Style({
+                image: new ol.style.Circle({
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,255,0,0.4)'
+                    }),
+                    radius: 5,
+                    stroke: new ol.style.Stroke({
+                        color: '#ff0',
+                        width: 1
+                    })
+                })
+            }),
+            'LineString': new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#f00',
+                    width: 3
+                })
+            }),
+            'MultiLineString': new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#0f0',
+                    width: 3
+                })
+            })
+        };
+
+        //3. gpx 데이터 포맷으로 layer(vector) 생성
+        var vector = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                url: './data/gpx/fells_loop.gpx',
+                format: new ol.format.GPX()
+            }),
+            style: function (feature) {
+                return style[feature.getGeometry().getType()];
+            }
+        });
+
+        //4. 이전에 생성한 layer(2개)로 Map을 생성 
+        var map = new ol.Map({
+            layers: [raster, vector],
+            target: document.getElementById('map'),
+            view: new ol.View({
+                center: [-7916041.528716288, 5228379.045749711],
+                zoom: 12
+            })
+        });
+
+        //5. 포인트 무브에 displayFeatureInfo 함수 등록
+        map.on('pointermove', function (evt) {
+            if (evt.dragging) {
+                return;
+            }
+            var pixel = map.getEventPixel(evt.originalEvent);
+            displayFeatureInfo(pixel);
+        });
+
+        //6. click이벤트에 displayFeatureInfo 함수 등록
+        map.on('click', function (evt) {
+            displayFeatureInfo(evt.pixel);
+        });
+
+        //7. Feature 에 정보를 div에 표시
+        var displayFeatureInfo = function (pixel) {
+            var features = [];
+            map.forEachFeatureAtPixel(pixel, function (feature) {
+                features.push(feature);
+            });
+            if (features.length > 0) {
+                var info = [];
+                var i;
+                for (i = 0; i < features.length; ++i) {
+                    info.push(features[i].get('desc')); //desc속성을 가져온다.
+                }
+                //info에 있는 요소를 join하여 HTML 표시
+                document.getElementById('info').innerHTML = info.join(', ') || '(unknown)';
+                map.getTarget().style.cursor = 'pointer';
+            } else {
+                document.getElementById('info').innerHTML = '&nbsp;';
+                map.getTarget().style.cursor = '';
+            }
+        };
+    </script>
+</body>
+
+</html>

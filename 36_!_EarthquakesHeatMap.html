@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <form>
+      <label>radius size</label>
+      <input id="radius" type="range" min="1" max="50" step="1" value="5"/>
+      <label>blur size</label>
+      <input id="blur" type="range" min="1" max="50" step="1" value="15"/>
+    </form>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+
+        var blur = document.getElementById('blur');
+        var radius = document.getElementById('radius');
+
+        //1. kml DATA를 이용하여 Heatmap 생성 blur,  radius 옵션 추가
+        var vector = new ol.layer.Heatmap({
+            source: new ol.source.Vector({
+                url: './data/kml/2012_Earthquakes_Mag5.kml',
+                format: new ol.format.KML({
+                    extractStyles: false
+                })
+            }),
+            blur: parseInt(blur.value, 10),
+            radius: parseInt(radius.value, 10)
+        });
+
+        //2. ! name 
+        vector.getSource().on('addfeature', function (event) {
+            // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+            // standards-violating <magnitude> tag in each Placemark.  We extract it from
+            // the Placemark's name instead.
+            var name = event.feature.get('name');
+            var magnitude = parseFloat(name.substr(2));
+            event.feature.set('weight', magnitude - 5);
+        });
+
+        var raster = new ol.layer.Tile({
+            source: new ol.source.Stamen({
+                layer: 'toner'
+            })
+        });
+
+        //3. 위에서 생성한 raster, vector를 map에 등록
+        var map = new ol.Map({
+            layers: [raster, vector],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        //설정 bar 이벤트 리스너 등록 
+        blur.addEventListener('input', function () {
+            vector.setBlur(parseInt(blur.value, 10));
+        });
+
+        radius.addEventListener('input', function () {
+            vector.setRadius(parseInt(radius.value, 10));
+        });
+    </script>
+</body>
+
+</html>

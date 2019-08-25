@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+
+        //1. map 생성
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM({
+                        wrapX: false
+                    })
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: ol.proj.fromLonLat([4.8, 47.75]),
+                zoom: 5
+            })
+        });
+
+        // Create the graticule component
+        // 2. 지도에 십자선을 생성한다.
+        var graticule = new ol.Graticule({
+            // the style to use for the lines, optional.
+            strokeStyle: new ol.style.Stroke({
+                color: 'rgba(255,120,0,0.9)',
+                width: 2,
+                lineDash: [0.5, 4] // 십자선의 간격
+            }),
+            showLabels: true
+        });
+
+        graticule.setMap(map);
+    </script>
+</body>
+
+</html>
