@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <input id="time" type="range" value="0" steps="1" />
+    <div id="info">&nbsp;</div>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        var thunderforest = "49e1ad1fd1054c638c9f20bc8b5f42e6";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        //도로 색
+        var colors = {
+            'Clement Latour': 'rgba(0, 0, 255, 0.7)',
+            'Damien de Baesnt': 'rgba(0, 215, 255, 0.7)',
+            'Sylvain Dhonneur': 'rgba(0, 165, 255, 0.7)',
+            'Tom Payne': 'rgba(0, 255, 255, 0.7)',
+            'Ulrich Prinz': 'rgba(0, 215, 255, 0.7)'
+        };
+
+        //2.
+        var styleCache = {};
+        var styleFunction = function (feature) {
+            var color = colors[feature.get('PLT')];
+            var style = styleCache[color];
+            if (!style) {
+                style = new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: color,
+                        width: 3
+                    })
+                });
+                styleCache[color] = style;
+            }
+            return style;
+        };
+
+        var vectorSource = new ol.source.Vector();
+
+       
+        //1. layer 생성
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM({
+                        attributions: [
+                            'All maps © <a href="https://www.opencyclemap.org/">OpenCycleMap</a>',
+                            ol.source.ATTRIBUTION
+                        ],
+                        url: 'https://{a-c}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png' +
+                            `?apikey=${thunderforest}`
+                    })
+                }),
+                new ol.layer.Vector({
+                    source: vectorSource,
+                    style: styleFunction
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [703365.7089403362, 5714629.865071137],
+                zoom: 9
+            })
+        });
+        
+
+
+
+        //3.도로 데이터 추가:  IGC 파일은 GPS 비행 기록기에서 데이터 로그를 교환하기위한 표준을 제공
+        var igcUrls = [
+            'data/igc/Clement-Latour.igc',
+            'data/igc/Damien-de-Baenst.igc',
+            'data/igc/Sylvain-Dhonneur.igc',
+            'data/igc/Tom-Payne.igc',
+            'data/igc/Ulrich-Prinz.igc'
+        ];
+        //위에 생성해둔 비어있는 feature[]에 IGC data 를 이용한 feature 추가
+        var igcFormat = new ol.format.IGC();
+        for (var i = 0; i < igcUrls.length; ++i) {
+            get(igcUrls[i], function (data) {
+                var features = igcFormat.readFeatures(data, {
+                    featureProjection: 'EPSG:3857'
+                });
+                vectorSource.addFeatures(features);
+            });
+        }
+        //색다른 방법으로 요청 ! IGC DATA
+        function get(url, callback) {
+            var client = new XMLHttpRequest();
+            client.open('GET', url);
+            client.onload = function () {
+                callback(client.responseText);
+            };
+            client.send();
+        }
+
+
+        var time = {
+            start: Infinity, //무한대
+            stop: -Infinity,
+            duration: 0
+        };
+        //4. 벡터에 피쳐가 add 될때 time 변수를 셋팅해준다
+        vectorSource.on('addfeature', function (event) {
+            var geometry = event.feature.getGeometry();
+            time.start = Math.min(time.start, geometry.getFirstCoordinate()[2]);
+            time.stop = Math.max(time.stop, geometry.getLastCoordinate()[2]);
+            time.duration = time.stop - time.start;
+        });
+        //5. time bar에 이벤트 걸기. featureOverlay에 있는 source에 hightlight(point 만들기)
+        document.getElementById('time').addEventListener('input', function () {
+            var value = parseInt(this.value, 10) / 100;
+            var m = time.start + (time.duration * value);
+            vectorSource.forEachFeature(function (feature) {
+                var geometry = (feature.getGeometry());
+                var coordinate = geometry.getCoordinateAtM(m, true);
+                var highlight = feature.get('highlight');
+                if (highlight === undefined) {
+                    highlight = new ol.Feature(new ol.geom.Point(coordinate));
+                    feature.set('highlight', highlight);
+                    featureOverlay.getSource().addFeature(highlight);
+                } else {
+                    highlight.getGeometry().setCoordinates(coordinate);
+                }
+            });
+            map.render();
+        });
+        var featureOverlay = new ol.layer.Vector({
+            source: new ol.source.Vector(),
+            map: map,
+            style: new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,0,0,0.9)'
+                    })
+                })
+            })
+        });
+
+        map.on('pointermove', function (evt) {
+            if (evt.dragging) {
+                return;
+            }
+            var coordinate = map.getEventCoordinate(evt.originalEvent);
+            displaySnap(coordinate);
+        });
+
+        map.on('click', function (evt) {
+            displaySnap(evt.coordinate);
+        });
+
+        //6. snap 효과를 나타내는것
+        var point = null;
+        var line = null;
+        var displaySnap = function (coordinate) {
+            var closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate); //가장 가까운 feature 로부터 coordinate 가져온다
+            var info = document.getElementById('info');
+            if (closestFeature === null) {
+                point = null;
+                line = null;
+                info.innerHTML = '&nbsp;';
+            } else {
+                var geometry = closestFeature.getGeometry();
+                var closestPoint = geometry.getClosestPoint(coordinate);
+                if (point === null) {
+                    point = new ol.geom.Point(closestPoint);
+                } else {
+                    point.setCoordinates(closestPoint);
+                }
+                var date = new Date(closestPoint[2] * 1000);
+                info.innerHTML =
+                    closestFeature.get('PLT') + ' (' + date.toUTCString() + ')';
+                var coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
+                if (line === null) {
+                    line = new ol.geom.LineString(coordinates);
+                } else {
+                    line.setCoordinates(coordinates);
+                }
+            }
+            map.render();
+        };
+        var stroke = new ol.style.Stroke({
+            color: 'rgba(255,0,0,0.9)',
+            width: 1
+        });
+        var style = new ol.style.Style({
+            stroke: stroke,
+            image: new ol.style.Circle({
+                radius: 5,
+                fill: null,
+                stroke: stroke
+            })
+        });
+        //7. 지도를 다 그린후에.. 이부분이없으면 이전에 closetfeature 찾아서 셋팅 해준것이 무용지물... 스타일 적용함으로써  시각적으로 보여줌
+        map.on('postcompose', function (evt) {
+            var vectorContext = evt.vectorContext;
+            vectorContext.setStyle(style);
+            if (point !== null) {
+                vectorContext.drawGeometry(point);
+            }
+            if (line !== null) {
+                vectorContext.drawGeometry(line);
+            }
+        });
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>

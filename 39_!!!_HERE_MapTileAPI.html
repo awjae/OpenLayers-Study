@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <select id="layer-select">
+        <option value="normal.day" selected>Normal Day</option>
+        <option value="normal.day.transit">Normal Day Transit</option>
+        <option value="pedestrian.day">Pedestrian Day</option>
+        <option value="terrain.day">Terrain Day</option>
+        <option value="satellite.day">Satellite Day</option>
+        <option value="hybrid.day">Hybrid Day</option>
+    </select>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        //app KEY 가 무료가 아니라 불편..
+        var appId = 'Your HERE Maps appId from https://developer.here.com/';
+        var appCode = 'Your HERE Maps appCode from https://developer.here.com/';
+        var hereLayers = [{
+                base: 'base',
+                type: 'maptile',
+                scheme: 'normal.day',
+                app_id: appId,
+                app_code: appCode
+            },
+            {
+                base: 'base',
+                type: 'maptile',
+                scheme: 'normal.day.transit',
+                app_id: appId,
+                app_code: appCode
+            },
+            {
+                base: 'base',
+                type: 'maptile',
+                scheme: 'pedestrian.day',
+                app_id: appId,
+                app_code: appCode
+            },
+            {
+                base: 'aerial',
+                type: 'maptile',
+                scheme: 'terrain.day',
+                app_id: appId,
+                app_code: appCode
+            },
+            {
+                base: 'aerial',
+                type: 'maptile',
+                scheme: 'satellite.day',
+                app_id: appId,
+                app_code: appCode
+            },
+            {
+                base: 'aerial',
+                type: 'maptile',
+                scheme: 'hybrid.day',
+                app_id: appId,
+                app_code: appCode
+            }
+        ];
+        var urlTpl = 'https://{1-4}.{base}.maps.cit.api.here.com' +
+            '/{type}/2.1/maptile/newest/{scheme}/{z}/{x}/{y}/256/png' +
+            '?app_id={app_id}&app_code={app_code}';
+        var layers = [];
+        var i, ii;
+        for (i = 0, ii = hereLayers.length; i < ii; ++i) {
+            var layerDesc = hereLayers[i];
+            layers.push(new TileLayer({
+                visible: false,
+                preload: Infinity,
+                source: new XYZ({
+                    url: createUrl(urlTpl, layerDesc),
+                    attributions: 'Map Tiles &copy; ' + new Date().getFullYear() + ' ' +
+                        '<a href="http://developer.here.com">HERE</a>'
+                })
+            }));
+        }
+
+        var map = new Map({
+            layers: layers,
+            // Improve user experience by loading tiles while dragging/zooming. Will make
+            // zooming choppy on mobile or slow devices.
+            loadTilesWhileInteracting: true,
+            target: 'map',
+            view: new View({
+                center: [921371.9389, 6358337.7609],
+                zoom: 10
+            })
+        });
+
+        function createUrl(tpl, layerDesc) {
+            return tpl
+                .replace('{base}', layerDesc.base)
+                .replace('{type}', layerDesc.type)
+                .replace('{scheme}', layerDesc.scheme)
+                .replace('{app_id}', layerDesc.app_id)
+                .replace('{app_code}', layerDesc.app_code);
+        }
+
+        var select = document.getElementById('layer-select');
+
+        function onChange() {
+            var scheme = select.value;
+            for (var i = 0, ii = layers.length; i < ii; ++i) {
+                layers[i].setVisible(hereLayers[i].scheme === scheme);
+            }
+        }
+        select.addEventListener('change', onChange);
+        onChange();
+    </script>
+</body>
+
+</html>

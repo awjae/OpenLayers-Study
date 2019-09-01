@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="ol.js"></script>
+  <link rel="stylesheet" href="ol.css">
+  <script
+    src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+  </script>
+
+</head>
+
+<body>
+  <!-- 기본틀로 사용하는 양식 -->
+  <div id="map" class="map"></div>
+
+  <script>
+    var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+    //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+    var map = new ol.Map({
+      interactions: new ol.interaction.defaults({
+        constrainResolution: true,  //default false  휠,트랙 패드 또는 핀치 제스처가 끝난 후 가장 가까운 정수 줌 레벨로 줌하십시오. ex: 애니매이션에 의해 분수 줌으로 끝나질떄...유용
+        onFocusOnly: true //지도에 초점이있을 때만 상호 작용합니다. 이는 MouseWheelZoom 및 DragPan 상호 작용에 영향을 미치며 브라우저 포커스가없는 맵에 페이지 스크롤이 필요한 경우에 유용합니다. 폴스면 휠됨
+      }),
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ],
+      target: 'map',
+      view: new ol.View({
+        center: [0, 0],
+        zoom: 2
+      })
+    });
+  </script>
+</body>
+
+</html>

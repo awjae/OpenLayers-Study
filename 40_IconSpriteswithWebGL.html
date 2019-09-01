@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <div id="info">&nbsp;</div>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        var iconInfo = [{
+            offset: [0, 0],
+            opacity: 1.0,
+            rotateWithView: true,
+            rotation: 0.0,
+            scale: 1.0,
+            size: [55, 55]
+        }, {
+            offset: [110, 86],
+            opacity: 0.75,
+            rotateWithView: false,
+            rotation: Math.PI / 2.0,
+            scale: 1.25,
+            size: [55, 55]
+        }, {
+            offset: [55, 0],
+            opacity: 0.5,
+            rotateWithView: true,
+            rotation: Math.PI / 3.0,
+            scale: 1.5,
+            size: [55, 86]
+        }, {
+            offset: [212, 0],
+            opacity: 1.0,
+            rotateWithView: true,
+            rotation: 0.0,
+            scale: 1.0,
+            size: [44, 44]
+        }];
+
+        //1. icon 스타일 배열요소를 만든다 (= 수많은 나비들) 
+        var i;
+        var iconCount = iconInfo.length;
+        var icons = new Array(iconCount);
+        for (i = 0; i < iconCount; ++i) {
+            var info = iconInfo[i];
+            icons[i] = new ol.style.Icon({
+                offset: info.offset, //오프셋
+                opacity: info.opacity, //투명도
+                rotateWithView: info.rotateWithView, //! 회전 View 요소와 함꼐 (차이를 느낄수 없었음.)
+                rotation: info.rotation, //회전
+                scale: info.scale, //크기
+                size: info.size, //이미지 크기
+                crossOrigin: 'anonymous', //CORS 요청에는 자격 증명 플래그를 설정하지 않음
+                src: './data/Butterfly.png'
+            });
+        }
+
+        //2. 랜덤한 좌표에 포인트를 생성하고 위에 생성한 아이콘 스타일들로  Feature생성후 feature 배열을 만든다.
+        var featureCount = 50000;
+        var features = new Array(featureCount);
+        var feature, geometry;
+        var e = 25000000;
+        for (i = 0; i < featureCount; ++i) {
+            geometry = new ol.geom.Point(
+                [2 * e * Math.random() - e, 2 * e * Math.random() - e]);
+            feature = new ol.Feature(geometry);
+            feature.setStyle(
+                new ol.style.Style({
+                    image: icons[i % (iconCount - 1)]
+                })
+            );
+            features[i] = feature;
+        }
+
+        var vectorSource = new ol.source.Vector({
+            features: features
+        });
+        var vector = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        //3. 
+        var map = new ol.Map({
+            layers: [vector],
+            target: document.getElementById('map'),
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 5
+            })
+        });
+
+        //4. 클론을 만들고 스타일을 null로 변경한다.
+        var overlayFeatures = [];
+        for (i = 0; i < featureCount; i += 30) {
+            var clone = features[i].clone();
+            clone.setStyle(null);
+            overlayFeatures.push(clone);
+        }
+        //클론과 나비 아이콘을 이용해 벡터 생성
+        new ol.layer.Vector({
+            map: map,
+            source: new ol.source.Vector({
+                features: overlayFeatures
+            }),
+            style: new ol.style.Style({
+                image: icons[iconCount - 1]
+            })
+        });
+
+        //맵 클릭 이벤트, 클릭지점(픽셀)에 있는 feature들을 배열에 넣는다. 배열의 길이에 따라 HTML 변경
+        map.on('click', function (evt) {
+            var info = document.getElementById('info');
+            info.innerHTML =
+                'Hold on a second, while I catch those butterflies for you ...';
+
+            window.setTimeout(function () {
+                var features = [];
+                map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+                    features.push(feature);
+                    return false;
+                });
+
+                if (features.length === 1) {
+                    info.innerHTML = 'Got one butterfly';
+                } else if (features.length > 1) {
+                    info.innerHTML = 'Got ' + features.length + ' butterflies';
+                } else {
+                    info.innerHTML = 'Couldn\'t catch a single butterfly';
+                }
+            }, 1);
+        });
+
+        //마우스 이동 이벤트에 따라 feature가 존재하면 마우스 포인트 변경
+        map.on('pointermove', function (evt) {
+            if (evt.dragging) {
+                return;
+            }
+            var pixel = map.getEventPixel(evt.originalEvent);
+            var hit = map.hasFeatureAtPixel(pixel);
+            map.getTarget().style.cursor = hit ? 'pointer' : '';
+        });
+    </script>
+</body>
+
+</html>
