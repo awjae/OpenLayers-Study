@@ -46,6 +46,7 @@
             scale = size / 10;
             var style = styleCache[size];
             if (!style) {
+                //! 캔버스안에 이친구들이 어떻게 형성되는지 ex)canvus는 HTML 상에서 1개만 형성됨
                 var canvas = document.createElement('canvas');
                 var vectorContext = ol.render.toContext(
                     canvas.getContext('2d'), {

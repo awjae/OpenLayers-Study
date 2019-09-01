@@ -44,19 +44,17 @@
             })
         });
 
-        //여기 잘봐야함
+        
         document.getElementById('export-png').addEventListener('click', function () {
             map.once('rendercomplete', function (event) {
                 var canvas = event.context.canvas;
                 // window.navigator.msSaveBlob()으로 Blob객체를 파일 다운로드할 수 있다.
                 if (navigator.msSaveBlob) {
                     navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
-                    console.log('111')
                 } else {
                     canvas.toBlob(function (blob) {
                         saveAs(blob, 'map.png');
                     });
-                    console.log('222')
                 }
             });
             map.renderSync();
