@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <button type="button" class="btn btn-default" id="India">India</button>
+    <button type="button" class="btn btn-default" id="Argentina">Argentina</button>
+    <button type="button" class="btn btn-default" id="Nigeria">Nigeria</button>
+    <button type="button" class="btn btn-default" id="Sweden">Sweden</button>
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        //api.mapbox 권한 거절로 인한 예제 실행 불가능.
+
+
+        var extents = {
+            India: transform([68.17665, 7.96553, 97.40256, 35.49401]),
+            Argentina: transform([-73.41544, -55.25, -53.62835, -21.83231]),
+            Nigeria: transform([2.6917, 4.24059, 14.57718, 13.86592]),
+            Sweden: transform([11.02737, 55.36174, 23.90338, 69.10625])
+        };
+
+        var base = new ol.layer.Tile({
+            source: new ol.source.TileJSON({
+                url: 'https://api.tiles.mapbox.com/v3/mapbox.world-light.json?secure',
+                crossOrigin: 'anonymous'
+            })
+        });
+
+        var overlay = new ol.layer.Tile({
+            extent: extents.India,
+            source: new ol.source.TileJSON({
+                url: 'https://api.tiles.mapbox.com/v3/mapbox.world-black.json?secure',
+                crossOrigin: 'anonymous'
+            })
+        });
+
+        var map = new ol.Map({
+            layers: [base, overlay],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 1
+            })
+        });
+
+        //각 버튼 클릭 이벤트 transformExtent
+        for (var key in extents) {
+            document.getElementById(key).onclick = function (event) {
+                overlay.setExtent(extents[event.target.id]);
+            };
+        }
+        function transform(extent) {
+            return ol.proj.transformExtent(extent, 'EPSG:4326', 'EPSG:3857');
+        }
+    </script>
+</body>
+
+</html>

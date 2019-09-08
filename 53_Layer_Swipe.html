@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <input id="swipe" type="range" style="width: 100%">
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        var osm = new ol.layer.Tile({
+            source: new ol.source.OSM()
+        });
+        var bing = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: BingMapKey,
+                imagerySet: 'Aerial'
+            })
+        });
+
+        var map = new ol.Map({
+            layers: [osm, bing],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var swipe = document.getElementById('swipe');
+
+        bing.on('precompose', function (event) {
+            var ctx = event.context;
+            var width = ctx.canvas.width * (swipe.value / 100);
+
+            ctx.save(); // 임시저장해놓고
+            ctx.beginPath(); //하위 경로를 비워 새경로를 시작
+            ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height); //사각범위 설정
+            ctx.clip(); //클립
+        });
+
+        bing.on('postcompose', function (event) {
+            var ctx = event.context;
+            ctx.restore(); // 저장하기
+        });
+
+        swipe.addEventListener('input', function () {
+            map.render(); //밑에 이미지 event render 과정을 이해하면 아하!
+        }, false);
+
+
+
+        
+    </script>
+    <img src="https://blog.smilecat.dev/images/map/openlayers/openlayers-render-event.png"  width="100%"/>
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <div>
+        <label for="idx1">
+            <input type="number" id="idx1"></input>
+            Square layer Z-index
+        </label></br>
+
+        <label for="idx2">
+            <input type="number" id="idx2"></input>
+            Triangle layer Z-index
+        </label>
+    </div>
+    <script>
+        //Layer에 사용할 style 미리 생성
+        var stroke = new ol.style.Stroke({
+            color: 'black',
+            width: 1
+        });
+        var styles = {
+            'square': new ol.style.Style({
+                image: new ol.style.RegularShape({
+                    fill: new ol.style.Fill({
+                        color: 'blue'
+                    }),
+                    stroke: stroke,
+                    points: 4,
+                    radius: 80,
+                    angle: Math.PI / 4
+                })
+            }),
+            'triangle': new ol.style.Style({
+                image: new ol.style.RegularShape({
+                    fill: new ol.style.Fill({
+                        color: 'red'
+                    }),
+                    stroke: stroke,
+                    points: 3,
+                    radius: 80,
+                    rotation: Math.PI / 4,
+                    angle: 0
+                })
+            }),
+            'star': new ol.style.Style({
+                image: new ol.style.RegularShape({
+                    fill: new ol.style.Fill({
+                        color: 'green'
+                    }),
+                    stroke: stroke,
+                    points: 5,
+                    radius: 80,
+                    radius2: 4,
+                    angle: 0
+                })
+            })
+        };
+
+        //vector Layer 생성
+        var layer0 = createLayer([40, 40], styles['star'], 0);
+        var layer1 = createLayer([0, 0], styles['square'], 1);
+        var layer2 = createLayer([0, 40], styles['triangle'], 0);
+
+        function createLayer(coordinates, style, zIndex) {
+            var feature = new ol.Feature(new ol.geom.Point(coordinates));
+            feature.setStyle(style);
+
+            var source = new ol.source.Vector({
+                features: [feature]
+            });
+
+            var vectorLayer = new ol.layer.Vector({
+                source: source
+            });
+            vectorLayer.setZIndex(zIndex);
+
+            return vectorLayer;
+        }
+
+        //layers 배열로 map을 만들어주고 layer0에 setMap한다
+        var layers = [];
+        layers.push(layer1);
+        layers.push(layer2);
+
+        var map = new ol.Map({
+            layers: layers,
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 18
+            })
+        });
+        layer0.setMap(map); //추가하는 다른방식
+
+       
+       //input 에 대한 binding
+        bindInputs(1, layer1);
+        bindInputs(2, layer2);
+
+        function bindInputs(id, layer) {
+            var idxInput = document.getElementById('idx' + id);
+            idxInput.onchange = function () {
+                layer.setZIndex(parseInt(this.value, 10) || 0);
+            };
+            idxInput.value = String(layer.getZIndex());
+        }
+    </script>
+</body>
+
+</html>

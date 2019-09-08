@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        var roads = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: BingMapKey,
+                imagerySet: 'Road' //기본
+            })
+        });
+
+        var imagery = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: BingMapKey,
+                imagerySet: 'Aerial' //spy로 보이는것
+            })
+        });
+
+        //..갑자기?
+        var container = document.getElementById('map');
+
+        var map = new ol.Map({
+            layers: [roads, imagery],
+            target: container,
+            view: new ol.View({
+                center: ol.proj.fromLonLat([-109, 46.5]),
+                zoom: 6
+            })
+        });
+
+
+        var radius = 75; // 반지름
+        //방향키로 크기 조절 가능 이벤트
+        document.addEventListener('keydown', function (evt) {
+            if (evt.which === 38) { //최소 반지름
+                radius = Math.min(radius + 5, 150);
+                map.render();
+                evt.preventDefault();
+            } else if (evt.which === 40) { //최대 반지름 설정
+                radius = Math.max(radius - 5, 25);
+                map.render();
+                evt.preventDefault();
+            }
+        });
+
+        // get the pixel position with every move
+        var mousePosition = null;
+
+        //마우스 오버시  mousePosition pixel
+        container.addEventListener('mousemove', function (event) {
+            mousePosition = map.getEventPixel(event);
+            map.render();
+        });
+
+        //벗어나면 없애!
+        container.addEventListener('mouseout', function () {
+            mousePosition = null;
+            map.render();
+        });
+
+        // before rendering the layer, do some clipping
+        // spy로 보이는 화면 
+        //context save와 restore 는 스택 구조로 이해
+        imagery.on('precompose', function (event) {
+            var ctx = event.context;
+            var pixelRatio = event.frameState.pixelRatio;
+            ctx.save();
+            ctx.beginPath();
+            //mousePosition 여부에 따라 spy !
+            if (mousePosition) {
+                // only show a circle around the mouse
+                ctx.arc(mousePosition[0] * pixelRatio, mousePosition[1] * pixelRatio,
+                    radius * pixelRatio, 0, 2 * Math.PI); //원만들기
+                ctx.lineWidth = 5 * pixelRatio;
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.stroke();
+            }
+            ctx.clip();
+        });
+
+        // after rendering the layer, restore the canvas context
+        imagery.on('postcompose', function (event) {
+            var ctx = event.context;
+            ctx.restore();
+        });
+    </script>
+</body>
+
+</html>
