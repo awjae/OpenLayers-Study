@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        var imagery = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: BingMapKey,
+                imagerySet: 'Aerial'
+            })
+        });
+
+        var container = document.getElementById('map');
+        //map에 BingMap 으로 객체 생성
+        var map = new ol.Map({
+            layers: [imagery],
+            target: container,
+            view: new ol.View({
+                center: ol.proj.fromLonLat([-109, 46.5]),
+                zoom: 6
+            })
+        });
+
+        //1. keydown에 따라 마우스 radius 조절 이벤트, map.render
+        var radius = 75;
+        document.addEventListener('keydown', function (evt) {
+            if (evt.which === 38) {
+                radius = Math.min(radius + 5, 150);
+                map.render();
+                evt.preventDefault();
+            } else if (evt.which === 40) {
+                radius = Math.max(radius - 5, 25);
+                map.render();
+                evt.preventDefault();
+            }
+        });
+
+        // get the pixel position with every move
+        var mousePosition = null;
+
+        container.addEventListener('mousemove', function (event) {
+            mousePosition = map.getEventPixel(event);
+            map.render();
+        });
+
+        container.addEventListener('mouseout', function () {
+            mousePosition = null;
+            map.render();
+        });
+
+        // after rendering the layer, show an oversampled version around the pointer
+        //2. Layer가 다 완성된이후 마우스의 위치에 따라 
+        imagery.on('postcompose', function (event) {
+            if (mousePosition) {
+                var context = event.context;
+                var pixelRatio = event.frameState.pixelRatio;
+                var half = radius * pixelRatio;
+                var centerX = mousePosition[0] * pixelRatio;
+                var centerY = mousePosition[1] * pixelRatio;
+                var originX = centerX - half; //뒤에보이는 확대된 layer
+                var originY = centerY - half;
+                var size = 2 * half + 1;
+                var sourceData = context.getImageData(originX, originY, size, size).data;
+                var dest = context.createImageData(size, size);
+                var destData = dest.data;
+                //확대된 테두리 내부의 source를 조절하는 반복문
+                for (var j = 0; j < size; ++j) {
+                    for (var i = 0; i < size; ++i) {
+                        var dI = i - half;
+                        var dJ = j - half;
+                        var dist = Math.sqrt(dI * dI + dJ * dJ);
+                        var sourceI = i;
+                        var sourceJ = j;
+                        if (dist < half) {
+                            sourceI = Math.round(half + dI / 2);
+                            sourceJ = Math.round(half + dJ / 2);
+                        }
+                        var destOffset = (j * size + i) * 4;
+                        var sourceOffset = (sourceJ * size + sourceI) * 4;
+                        destData[destOffset] = sourceData[sourceOffset];
+                        destData[destOffset + 1] = sourceData[sourceOffset + 1];
+                        destData[destOffset + 2] = sourceData[sourceOffset + 2];
+                        destData[destOffset + 3] = sourceData[sourceOffset + 3];
+                    }
+                }
+                //테두리 설정하는 부분
+                context.beginPath();
+                context.arc(centerX, centerY, half, 0, 2 * Math.PI);
+                context.lineWidth = 3 * pixelRatio;
+                context.strokeStyle = 'rgba(255,255,255,0.5)';
+                context.putImageData(dest, originX, originY);
+                context.stroke();
+                context.restore();
+            }
+        });
+    </script>
+</body>
+
+</html>

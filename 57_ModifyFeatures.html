@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        //data geojson으로 벡터레이어를 생성하고 선택및 수정 interaction을 주는 것
+        var raster = new ol.layer.Tile({
+            source: new ol.source.OSM()
+        });
+
+        var vector = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                url: 'data/geojson/countries.geojson',
+                format: new ol.format.GeoJSON(),
+                wrapX: false
+            })
+        });
+
+        var select = new ol.interaction.Select({
+            wrapX: false
+        });
+
+        var modify = new ol.interaction.Modify({
+            features: select.getFeatures()
+        });
+
+        var map = new ol.Map({
+            interactions: ol.interaction.defaults().extend([select, modify]),
+            layers: [raster, vector],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+    </script>
+</body>
+
+</html>

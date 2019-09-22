@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        //ol 사이트 에러
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        var mdf = 'Library://Public/Samples/Sheboygan/Maps/Sheboygan.MapDefinition';
+        var agentUrl =
+            'http://www.buoyshark.com/mapguide/mapagent/mapagent.fcgi?';
+        var bounds = [
+            -87.865114442365922,
+            43.665065564837931,
+            -87.595394059497067,
+            43.823852564430069
+        ];
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Image({
+                    extent: bounds,
+                    source: new ol.source.ImageMapGuide({
+                        projection: 'EPSG:4326',
+                        url: agentUrl,
+                        useOverlay: false,
+                        metersPerUnit: 111319.4908, //value returned from mapguide
+                        params: {
+                            MAPDEFINITION: mdf,
+                            FORMAT: 'PNG',
+                            USERNAME: 'OpenLayers',
+                            PASSWORD: 'OpenLayers'
+                        },
+                        ratio: 2
+                    })
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [-87.7302542509315, 43.744459064634],
+                projection: 'EPSG:4326',
+                zoom: 12
+            })
+        });
+    </script>
+</body>
+
+</html>

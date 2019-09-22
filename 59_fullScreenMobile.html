@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+
+        const view = new ol.View({
+            center: [-9101767, 2822912],
+            zoom: 14
+        });
+
+        const map = new ol.Map({
+            controls: ol.control.defaults().extend([
+                new ol.control.FullScreen()
+            ]),
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.BingMaps({
+                        key: 'As1HiMj1PvLPlqc_gtM7AqZfBL8ZL3VrjaS3zIb22Uvb9WKhuJObROC-qUpa81U5',
+                        imagerySet: 'Aerial'
+                    })
+                })
+            ],
+            target: 'map',
+            view: view
+        });
+    </script>
+</body>
+
+</html>

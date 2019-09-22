@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        var viewport = document.getElementById('map');
+
+        function getMinZoom() {
+            var width = viewport.clientWidth;
+            return Math.ceil(Math.LOG2E * Math.log(width / 256));
+        }
+
+        var initialZoom = getMinZoom();
+
+        var view = new ol.View({
+            center: [0, 0],
+            minZoom: initialZoom,
+            zoom: initialZoom
+        });
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: view
+        });
+
+        window.addEventListener('resize', function () {
+            var minZoom = getMinZoom();
+            if (minZoom !== view.getMinZoom()) {
+                view.setMinZoom(minZoom);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -13,14 +13,34 @@
 <body>
     <!-- 기본틀로 사용하는 양식 -->
     <div id="map" class="map"></div>
-    <img src="https://blog.smilecat.dev/images/map/openlayers/openlayers-render-event.png"  width="100%"/>
     
     <script>
         var BingMapKey="Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
-        var thunderKey="49e1ad1fd1054c638c9f20bc8b5f42e6";
-        
         //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
-        
+
+        //mapBox 서버 401오류   , 인증정보 오류
+        var map = new ol.Map({
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM(),
+            minResolution: 200,
+            maxResolution: 2000
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.TileJSON({
+              url: 'https://api.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy.json?secure',
+              crossOrigin: 'anonymous'
+            }),
+            minResolution: 2000,
+            maxResolution: 20000
+          })
+        ],
+        target: 'map',
+        view: new ol.View({
+          center: [653600, 5723680],
+          zoom: 5
+        })
+      });
     </script>
 </body>
 </html>
