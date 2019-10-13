@@ -19,12 +19,12 @@
     <div id="map" class="map"></div>
 
     <script>
-        //ol 사이트 에러
+        //ol 사이트 에러 --> 예제 업뎃
         var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
         //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
-        var mdf = 'Library://Public/Samples/Sheboygan/Maps/Sheboygan.MapDefinition';
+        var mdf = 'Library://Samples/Sheboygan/Maps/Sheboygan.MapDefinition';
         var agentUrl =
-            'http://www.buoyshark.com/mapguide/mapagent/mapagent.fcgi?';
+            'http://138.197.230.93:8008/mapguide/mapagent/mapagent.fcgi?';
         var bounds = [
             -87.865114442365922,
             43.665065564837931,
@@ -43,8 +43,9 @@
                         params: {
                             MAPDEFINITION: mdf,
                             FORMAT: 'PNG',
-                            USERNAME: 'OpenLayers',
-                            PASSWORD: 'OpenLayers'
+                            VERSION: '3.0.0',
+                            USERNAME: 'OLGuest',
+                            PASSWORD: 'olguest'
                         },
                         ratio: 2
                     })

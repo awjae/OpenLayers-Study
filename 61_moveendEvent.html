@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+//Move End Event : 지도가 움직이고나서 끝난 이벤트를 잡아 top과 bottom의 위경도 수치를 아는 예제
+//기본 : Map View Source Layer
+//추가 : extent, proj
+</script>
+<body>
+    
+
+    <body>
+        <div id="map" class="map"></div>
+        <label>top</label><input type="text" id="top">
+        <label>right</label><input type="text" id="right"><br>
+        <label>bottom</label><input type="text" id="bottom">
+        <label>left</label><input type="text" id="left">
+    </body>
+    <script>
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        //div이름을 받아 value값을 변경 
+        function display(id, value) {
+            document.getElementById(id).value = value.toFixed(2);
+        }
+
+        //wrapping (얻은 extent 값을 위경도로 변환)
+        function wrapLon(value) {
+            var worlds = Math.floor((value + 180) / 360);
+            return value - (worlds * 360);
+        }
+
+        function onMoveEnd(evt) {
+            var map = evt.map;
+            var extent = map.getView().calculateExtent(map.getSize());  //현재보기 상태의 범위와 전달 된 픽셀 크기를 계산
+            //console.log(extent); [-20154915.618235275, -10077457.809117638, 20154915.618235275, 10077457.809117638]
+            var bottomLeft = ol.proj.toLonLat(ol.extent.getBottomLeft(extent));
+            var topRight = ol.proj.toLonLat(ol.extent.getTopRight(extent));
+            display('left', wrapLon(bottomLeft[0]));
+            display('bottom', bottomLeft[1]);
+            display('right', wrapLon(topRight[0]));
+            display('top', topRight[1]);
+        }
+
+        map.on('moveend', onMoveEnd);
+    </script>
+</body>
+
+</html>

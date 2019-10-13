@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    //Permalink : 줌레벨과 중앙값을 map move end에 따라 URL이 변경된다.
+    //  History API는 모든 브라우저 에서 지원되는 것은 아니며 polyfill 을 사용하는 것을 고려할 수 있습니다 .
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    
+    <script>
+        //기본 줌레벨 및 중앙 값설정
+        var zoom = 2;
+        var center = [0, 0];
+        var rotation = 0;
+
+        //처음에 히스토리가 있으면 hash에서 가져와서 실행
+        if (window.location.hash !== '') {
+            // try to restore center, zoom-level and rotation from the URL
+            console.log('asdad')
+            var hash = window.location.hash.replace('#map=', '');
+            var parts = hash.split('/');
+            if (parts.length === 4) {
+                zoom = parseInt(parts[0], 10);
+                center = [
+                    parseFloat(parts[1]),
+                    parseFloat(parts[2])
+                ];
+                rotation = parseFloat(parts[3]);
+            }
+        }
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: center,
+                zoom: zoom,
+                rotation: rotation
+            })
+        });
+
+        var shouldUpdate = true;
+        var view = map.getView();
+        var updatePermalink = function () {
+            if (!shouldUpdate) {
+                // do not update the URL when the view was changed in the 'popstate' handler
+                shouldUpdate = true;
+                return;
+            }
+
+            //현재 view의 zoom, center, rotate 값을 가져와 hash, state 생성후  window.history.pushState
+            var center = view.getCenter();
+            var hash = '#map=' +
+                view.getZoom() + '/' +
+                Math.round(center[0] * 100) / 100 + '/' +
+                Math.round(center[1] * 100) / 100 + '/' +
+                view.getRotation();
+            var state = {
+                zoom: view.getZoom(),
+                center: view.getCenter(),
+                rotation: view.getRotation()
+            };
+            window.history.pushState(state, 'map', hash);
+            //히스토리 엔트리의 추가 및 변경
+            //https://developer.mozilla.org/ko/docs/Web/API/History_API#%ED%9E%88%EC%8A%A4%ED%86%A0%EB%A6%AC_%EC%97%94%ED%8A%B8%EB%A6%AC%EC%9D%98_%EC%B6%94%EA%B0%80_%EB%B0%8F_%EB%B3%80%EA%B2%BD
+        };
+
+        map.on('moveend', updatePermalink);
+
+        // restore the view state when navigating through the history, see
+        // window의 history Event Cycle 을 이해하면 popstate가 무엇인지 알수 있다. (사용자가 새로운 상태로 이동할 때 마다, popstate 이벤트가 발생)
+        // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onpopstate
+        window.addEventListener('popstate', function (event) {
+            if (event.state === null) {
+                return;
+            }
+            map.getView().setCenter(event.state.center);
+            map.getView().setZoom(event.state.zoom);
+            map.getView().setRotation(event.state.rotation);
+            shouldUpdate = false;
+        });
+    </script>
+</body>
+
+</html>
