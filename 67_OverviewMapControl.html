@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : control
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+   
+    <script>
+        var source = new ol.source.OSM();
+        var overviewMapControl = new ol.control.OverviewMap({
+            layers: [
+                new ol.layer.Tile({
+                    source: source
+                })
+            ]
+        });
+
+        var map = new ol.Map({
+            controls: ol.control.defaults().extend([
+                ol.control.overviewMapControl
+            ]),
+            layers: [
+                new ol.layer.Tile({
+                    source: source
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [500000, 6000000],
+                zoom: 7
+            })
+        });
+    </script>
+</body>
+
+</html>

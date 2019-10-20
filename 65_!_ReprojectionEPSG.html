@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : extend(applyTransform), proj
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+        <label for="epsg-query">Search projection:</label>
+        <input type="text" id="epsg-query" placeholder="4326, 27700, US National Atlas, Swiss, France, ..."
+            class="form-control" size="50" />
+        <button id="epsg-search" class="btn">Search</button>
+        <span id="epsg-result"></span>
+        <div>
+            <label for="render-edges">
+                Render reprojection edges
+                <input type="checkbox" id="render-edges">
+            </label>
+        </div>
+    </form>
+
+    <script>
+
+        //CORS , chrome.exe --disable-web-security --allow-file-access-from-files
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                projection: 'EPSG:3857',
+                center: [0, 0],
+                zoom: 1
+            })
+        });
+
+
+        var queryInput = document.getElementById('epsg-query');
+        var searchButton = document.getElementById('epsg-search');
+        var resultSpan = document.getElementById('epsg-result');
+        var renderEdgesCheckbox = document.getElementById('render-edges');
+
+        function setProjection(code, name, proj4def, bbox) {
+            if (code === null || name === null || proj4def === null || bbox === null) {
+                resultSpan.innerHTML = 'Nothing usable found, using EPSG:3857...';
+                map.setView(new ol.View({
+                    projection: 'EPSG:3857',
+                    center: [0, 0],
+                    zoom: 1
+                }));
+                return;
+            }
+
+            resultSpan.innerHTML = '(' + code + ') ' + name;
+
+            var newProjCode = 'EPSG:' + code;
+            // new ol.proj.proj4.defs(newProjCode, proj4def);
+            // register(proj4);
+            proj4.defs(newProjCode, proj4def);
+            ol.proj.proj4.register(proj4);
+
+
+            var newProj = getProjection(newProjCode);
+            var fromLonLat = getTransform('EPSG:4326', newProj);
+
+            // very approximate calculation of projection extent
+            var extent = applyTransform(
+                [bbox[1], bbox[2], bbox[3], bbox[0]], fromLonLat);
+            newProj.setExtent(extent);
+            var newView = new ol.View({
+                projection: newProj
+            });
+            map.setView(newView);
+            newView.fit(extent);
+        }
+
+
+        function search(query) {
+            resultSpan.innerHTML = 'Searching ...';
+            fetch('https://epsg.io/?format=json&q=' + query).then(function (response) {
+                return response.json();
+            }).then(function (json) {
+                var results = json['results'];
+                if (results && results.length > 0) {
+                    for (var i = 0, ii = results.length; i < ii; i++) {
+                        var result = results[i];
+                        if (result) {
+                            var code = result['code'];
+                            var name = result['name'];
+                            var proj4def = result['proj4'];
+                            var bbox = result['bbox'];
+                            if (code && code.length > 0 && proj4def && proj4def.length > 0 &&
+                                bbox && bbox.length == 4) {
+                                setProjection(code, name, proj4def, bbox);
+                                return;
+                            }
+                        }
+                    }
+                }
+                setProjection(null, null, null, null);
+            });
+        }
+
+
+        /**
+         * Handle click event.
+         * @param {Event} event The event.
+         */
+        searchButton.onclick = function (event) {
+            search(queryInput.value);
+            event.preventDefault();
+        };
+
+
+        /**
+         * Handle change event.
+         */
+        renderEdgesCheckbox.onchange = function () {
+            map.getLayers().forEach(function (layer) {
+                if (layer instanceof ol.layer.Tile) {
+                    var source = layer.getSource();
+                    if (source instanceof ol.source.TileImage) {
+                        source.setRenderReprojectionEdges(renderEdgesCheckbox.checked);
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>
