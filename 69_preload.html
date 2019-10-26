@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 저해상도 지도를 먼저 빠르게 사전load한다
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map1" class="map"></div>
+    <div id="map2" class="map"></div>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        var thunderKey = "49e1ad1fd1054c638c9f20bc8b5f42e6";
+        var view = new ol.View({
+            center: [-4808600, -2620936],
+            zoom: 8
+        });
+
+        var map1 = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    preload: Infinity,
+                    source: new ol.source.BingMaps({
+                        key: BingMapKey,
+                        imagerySet: 'Aerial'
+                    })
+                })
+            ],
+            target: 'map1',
+            view: view
+        });
+
+        var map2 = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    preload: 0, // default value
+                    source: new ol.source.BingMaps({
+                        key: BingMapKey,
+                        imagerySet: 'AerialWithLabelsOnDemand'
+                    })
+                })
+            ],
+            target: 'map2',
+            view: view
+        });
+    </script>
+</body>
+
+</html>
