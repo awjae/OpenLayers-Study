@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : OSM projection 조정
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                projection: 'EPSG:4326',
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+    </script>
+</body>
+
+</html>

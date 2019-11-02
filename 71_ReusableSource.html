@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : url을 모아둔 배열을 통해 mapbox에 요청하는 예제
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <button class="switcher" value="0">January</button>
+    <button class="switcher" value="1">January (with bathymetry)</button>
+    <button class="switcher" value="2">July</button>
+    <button class="switcher" value="3">July (with bathymetry)</button>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        var thunderKey = "49e1ad1fd1054c638c9f20bc8b5f42e6";
+        var key = 'pk.eyJ1IjoiYXctamFlIiwiYSI6ImNrMTVubTJlbzB3dG0zbXRjaXE0M3FvZm4ifQ.4Bguqsxsl67BekIMBWgmVA';
+        var baseUrl = 'https://{a-c}.tiles.mapbox.com/v4';
+        var urls = [
+            baseUrl + '/mapbox.blue-marble-topo-jan/{z}/{x}/{y}.png?access_token=' + key,
+            baseUrl + '/mapbox.blue-marble-topo-bathy-jan/{z}/{x}/{y}.png?access_token=' + key,
+            baseUrl + '/mapbox.blue-marble-topo-jul/{z}/{x}/{y}.png?access_token=' + key,
+            baseUrl + '/mapbox.blue-marble-topo-bathy-jul/{z}/{x}/{y}.png?access_token=' + key
+        ];
+
+        var source = new ol.source.XYZ();
+
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: source
+                })
+            ],
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+
+        function updateUrl(index) {
+            source.setUrl(urls[index]);
+        }
+
+        var buttons = document.getElementsByClassName('switcher');
+        for (var i = 0, ii = buttons.length; i < ii; ++i) {
+            var button = buttons[i];
+            button.addEventListener('click', updateUrl.bind(null, Number(button.value)));
+        }
+
+        updateUrl(0);
+    </script>
+</body>
+
+</html>
