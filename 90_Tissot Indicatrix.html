@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <h4>EPSG:4326</h4>
+    <div id="map4326" class="map"></div>
+    <h4>EPSG:3857</h4>
+    <div id="map3857" class="map"></div>
+    <script>
+        var vectorLayer4326 = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        var vectorLayer3857 = new ol.layer.Vector({
+            source: new ol.source.Vector()
+        });
+
+        var map4326 = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.TileWMS({
+                        url: 'https://ahocevar.com/geoserver/wms',
+                        params: {
+                            'LAYERS': 'ne:NE1_HR_LC_SR_W_DR',
+                            'TILED': true
+                        }
+                    })
+                }),
+                vectorLayer4326
+            ],
+            target: 'map4326',
+            view: new ol.View({
+                projection: 'EPSG:4326',
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var map3857 = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.TileWMS({
+                        url: 'https://ahocevar.com/geoserver/wms',
+                        params: {
+                            'LAYERS': 'ne:NE1_HR_LC_SR_W_DR',
+                            'TILED': true
+                        }
+                    })
+                }),
+                vectorLayer3857
+            ],
+            target: 'map3857',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var radius = 800000;
+        var x, y;
+        for (x = -180; x < 180; x += 30) {
+            for (y = -90; y < 90; y += 30) {
+                var circle4326 = ol.geom.Polygon.circular([x, y], radius, 64);
+                var circle3857 = circle4326.clone().transform('EPSG:4326', 'EPSG:3857');
+                vectorLayer4326.getSource().addFeature(new ol.Feature(circle4326));
+                vectorLayer3857.getSource().addFeature(new ol.Feature(circle3857));
+            }
+        }
+    </script>
+</body>
+
+</html>
