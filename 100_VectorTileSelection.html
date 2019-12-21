@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+        <label>Action type &nbsp;</label>
+        <select id="type" class="form-control">
+            <option value="singleselect" selected>Single Select</option>
+            <option value="multiselect">Multi Select</option>
+        </select>
+    </form>
+
+    <script>
+        // lookup for selection objects
+        var selection = {};
+
+        var vtLayer = new ol.layer.VectorTile({
+            declutter: true,
+            source: new ol.source.VectorTile({
+                maxZoom: 15,
+                format: new ol.format.MVT({
+                    idProperty: 'iso_a3'
+                }),
+                url: 'https://ahocevar.com/geoserver/gwc/service/tms/1.0.0/' +
+                    'ne:ne_10m_admin_0_countries@EPSG%3A900913@pbf/{z}/{x}/{-y}.pbf'
+            }),
+            style: function (feature) {
+                var selected = !!selection[feature.getId()];
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: selected ? 'rgba(200,20,20,0.8)' : 'gray',
+                        width: selected ? 2 : 1
+                    }),
+                    fill: new ol.style.Fill({
+                        color: selected ? 'rgba(200,20,20,0.2)' : 'rgba(20,20,20,0.9)'
+                    })
+                });
+            }
+        });
+
+        var map = new ol.Map({
+            layers: [
+                vtLayer
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var selectElement = document.getElementById('type');
+
+        map.on('click', function (event) {
+            vtLayer.getFeatures(event.pixel).then(function (features) {
+                if (!features.length) {
+                    selection = {};
+                    // force redraw of layer style
+                    vtLayer.setStyle(vtLayer.getStyle());
+                    return;
+                }
+                var feature = features[0];
+                if (!feature) {
+                    return;
+                }
+                var fid = feature.getId();
+
+                if (selectElement.value === 'singleselect') {
+                    selection = {};
+                }
+                // add selected feature to lookup
+                selection[fid] = feature;
+
+                // force redraw of layer style
+                vtLayer.setStyle(vtLayer.getStyle());
+            });
+
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var map = null;
+
+        var styles = {
+            'amenity': {
+                'parking': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(170, 170, 170, 1.0)',
+                        width: 1
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(170, 170, 170, 0.3)'
+                    })
+                })
+            },
+            'building': {
+                '.*': new ol.style.Style({
+                    zIndex: 100,
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(246, 99, 79, 1.0)',
+                        width: 1
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(246, 99, 79, 0.3)'
+                    })
+                })
+            },
+            'highway': {
+                'service': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(255, 255, 255, 1.0)',
+                        width: 2
+                    })
+                }),
+                '.*': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(255, 255, 255, 1.0)',
+                        width: 3
+                    })
+                })
+            },
+            'landuse': {
+                'forest|grass|allotments': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(140, 208, 95, 1.0)',
+                        width: 1
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(140, 208, 95, 0.3)'
+                    })
+                })
+            },
+            'natural': {
+                'tree': new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 2,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(140, 208, 95, 1.0)'
+                        }),
+                        stroke: null
+                    })
+                })
+            }
+        };
+
+        var vectorSource = new ol.source.Vector({
+            format: new ol.format.OSMXML(),
+            loader: function (extent, resolution, projection) {
+                var epsg4326Extent = ol.proj.transformExtent(extent, projection, 'EPSG:4326');
+                var client = new XMLHttpRequest();
+                client.open('POST', 'https://overpass-api.de/api/interpreter');
+                client.addEventListener('load', function () {
+                    var features = new ol.format.OSMXML().readFeatures(client.responseText, {
+                        featureProjection: map.getView().getProjection()
+                    });
+                    vectorSource.addFeatures(features);
+                });
+                var query = '(node(' +
+                    epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+                    epsg4326Extent[3] + ',' + epsg4326Extent[2] +
+                    ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out meta;';
+                client.send(query);
+            },
+            strategy: ol.loadingstrategy.bboxStrategy
+        });
+
+        var vector = new ol.layer.Vector({
+            source: vectorSource,
+            style: function (feature) {
+                for (var key in styles) {
+                    var value = feature.get(key);
+                    if (value !== undefined) {
+                        for (var regexp in styles[key]) {
+                            if (new RegExp(regexp).test(value)) {
+                                return styles[key][regexp];
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+        });
+
+        var raster = new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                imagerySet: 'Aerial',
+                key: 'Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa'
+            })
+        });
+
+        map = new ol.Map({
+            layers: [raster, vector],
+            target: document.getElementById('map'),
+            view: new ol.View({
+                center: [739218, 5906096],
+                maxZoom: 19,
+                zoom: 17
+            })
+        });
+    </script>
+</body>
+
+</html>

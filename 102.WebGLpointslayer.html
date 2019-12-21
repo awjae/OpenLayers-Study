@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <div id="map" class="map"></div>
+    <label>Choose a predefined style from the list below or edit it as JSON manually.</label><br>
+    <select id="style-select">
+        <option value="icons">Icons</option>
+        <option value="triangles">Triangles, color related to population</option>
+        <option value="triangles-latitude">Triangles, color related to latitude</option>
+        <option value="circles">Circles, size related to population</option>
+        <option value="circles-zoom">Circles, size related to zoom</option>
+    </select>
+    <textarea style="width: 100%; height: 20rem; font-family: monospace; font-size: small;"
+        id="style-editor"></textarea>
+    <small>
+        <span id="style-valid" style="display: none; color: forestgreen">✓ style is valid</span>
+        <span id="style-invalid" style="display: none; color: grey">✗ <span>style not yet valid...</span></span>
+        &nbsp;
+    </small>
+
+    <script>
+        var BingMapKey = "Ar-WkIA7R3sY5gwqt0oUGHrGTnxGGFCF4EOaAjgZ2D9JdF5EuXZdhpXxbE7PQnxa";
+        var thunderKey = "49e1ad1fd1054c638c9f20bc8b5f42e6";
+        var mapKey = 'pk.eyJ1IjoiYXctamFlIiwiYSI6ImNrMTVubTJlbzB3dG0zbXRjaXE0M3FvZm4ifQ.4Bguqsxsl67BekIMBWgmVA';
+
+        var vectorSource = new ol.source.Vector({
+            url: 'data/geojson/world-cities.geojson',
+            format: new ol.format.GeoJSON()
+        });
+
+        var predefinedStyles = {
+            'icons': {
+                symbol: {
+                    symbolType: 'image',
+                    src: 'data/icon.png',
+                    size: [18, 28],
+                    color: 'lightyellow',
+                    rotateWithView: false,
+                    offset: [0, 9]
+                }
+            },
+            'triangles': {
+                symbol: {
+                    symbolType: 'triangle',
+                    size: 18,
+                    color: [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'population'],
+                        20000, '#5aca5b',
+                        300000, '#ff6a19'
+                    ],
+                    rotateWithView: true
+                }
+            },
+            'triangles-latitude': {
+                symbol: {
+                    symbolType: 'triangle',
+                    size: [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'population'],
+                        40000, 12,
+                        2000000, 24
+                    ],
+                    color: [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'latitude'],
+                        -60, '#ff14c3',
+                        -20, '#ff621d',
+                        20, '#ffed02',
+                        60, '#00ff67'
+                    ],
+                    offset: [0, 0],
+                    opacity: 0.95
+                }
+            },
+            'circles': {
+                symbol: {
+                    symbolType: 'circle',
+                    size: [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'population'],
+                        40000, 8,
+                        2000000, 28
+                    ],
+                    color: '#006688',
+                    rotateWithView: false,
+                    offset: [0, 0],
+                    opacity: [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'population'],
+                        40000, 0.6,
+                        2000000, 0.92
+                    ]
+                }
+            },
+            'circles-zoom': {
+                symbol: {
+                    symbolType: 'circle',
+                    size: [
+                        'interpolate',
+                        ['exponential', 2.5],
+                        ['zoom'],
+                        2, 1,
+                        14, 32
+                    ],
+                    color: '#240572',
+                    offset: [0, 0],
+                    opacity: 0.95
+                }
+            }
+        };
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: document.getElementById('map'),
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var literalStyle;
+        var pointsLayer;
+
+        function refreshLayer(newStyle) {
+            var previousLayer = pointsLayer;
+            pointsLayer = new ol.layer.WebGLPoints({
+                source: vectorSource,
+                style: newStyle,
+                disableHitDetection: true
+            });
+            map.addLayer(pointsLayer);
+
+            if (previousLayer) {
+                map.removeLayer(previousLayer);
+                previousLayer.dispose();
+            }
+            literalStyle = newStyle;
+        }
+
+        var spanValid = document.getElementById('style-valid');
+        var spanInvalid = document.getElementById('style-invalid');
+
+        function setStyleStatus(errorMsg) {
+            var isError = typeof errorMsg === 'string';
+            spanValid.style.display = errorMsg === null ? 'initial' : 'none';
+            spanInvalid.firstElementChild.innerText = isError ? errorMsg : '';
+            spanInvalid.style.display = isError ? 'initial' : 'none';
+        }
+
+        var editor = document.getElementById('style-editor');
+        editor.addEventListener('input', function () {
+            var textStyle = editor.value;
+            try {
+                var newLiteralStyle = JSON.parse(textStyle);
+                if (JSON.stringify(newLiteralStyle) !== JSON.stringify(literalStyle)) {
+                    refreshLayer(newLiteralStyle);
+                }
+                setStyleStatus(null);
+            } catch (e) {
+                setStyleStatus(e.message);
+            }
+        });
+
+        var select = document.getElementById('style-select');
+        select.value = 'circles';
+
+        function onSelectChange() {
+            var style = select.value;
+            var newLiteralStyle = predefinedStyles[style];
+            editor.value = JSON.stringify(newLiteralStyle, null, 2);
+            try {
+                refreshLayer(newLiteralStyle);
+                setStyleStatus();
+            } catch (e) {
+                setStyleStatus(e.message);
+            }
+        }
+        onSelectChange();
+        select.addEventListener('change', onSelectChange);
+    </script>
+</body>
+
+</html>
