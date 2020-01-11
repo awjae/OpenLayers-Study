@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="ol.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <script
+        src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL">
+    </script>
+
+</head>
+<script>
+    // : 
+    //기본 : Map View Source Layer
+    //추가 : 
+</script>
+
+<body>
+    <!-- 기본틀로 사용하는 양식 -->
+    <div id="map" class="map"></div>
+
+    <script>
+        var projection = ol.proj.get('EPSG:3857');
+        var projectionExtent = projection.getExtent();
+        var size = ol.extent.getWidth(projectionExtent) / 256;
+        var resolutions = new Array(14);
+        var matrixIds = new Array(14);
+        for (var z = 0; z < 14; ++z) {
+            // generate resolutions and matrixIds arrays for this WMTS
+            resolutions[z] = size / Math.pow(2, z);
+            matrixIds[z] = z;
+        }
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM(),
+                    opacity: 0.7
+                }),
+                new ol.layer.Tile({
+                    opacity: 0.7,
+                    source: new ol.source.WMTS({
+                        attributions: 'Tiles © <a href="https://services.arcgisonline.com/arcgis/rest/' +
+                            'services/Demographics/USA_Population_Density/MapServer/">ArcGIS</a>',
+                        url: 'https://services.arcgisonline.com/arcgis/rest/' +
+                            'services/Demographics/USA_Population_Density/MapServer/WMTS/',
+                        layer: '0',
+                        matrixSet: 'EPSG:3857',
+                        format: 'image/png',
+                        projection: projection,
+                        tileGrid: new ol.tilegrid.WMTS({
+                            origin: ol.extent.getTopLeft(projectionExtent),
+                            resolutions: resolutions,
+                            matrixIds: matrixIds
+                        }),
+                        style: 'default',
+                        wrapX: true
+                    })
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [-11158582, 4813697],
+                zoom: 4
+            })
+        });
+    </script>
+</body>
+
+</html>
